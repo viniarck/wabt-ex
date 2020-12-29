@@ -8,6 +8,9 @@ defmodule Wabt do
   end
 
   defmodule Native do
+    @moduledoc """
+    Wabt NIFs module. This module isn't meant to be used directly by the end user.
+    """
     @on_load :load_nifs
 
     def load_nifs do
