@@ -17,7 +17,13 @@ defmodule Wabt.MixProject do
       start_permanent: Mix.env() == :prod,
       compilers: [:nif, :elixir, :app],
       aliases: ["compile.erlang", "run"],
-      deps: deps()
+      deps: deps(),
+      source_url: "https://github.com/viniarck/wabt-ex",
+      homepage_url: "https://github.com/viniarck/wabt-ex",
+      docs: [
+        main: "Wabt",
+        extras: ["README.md"]
+      ]
     ]
   end
 
@@ -32,6 +38,7 @@ defmodule Wabt.MixProject do
   defp deps do
     [
       {:briefly, "~> 0.3.0"},
+      {:ex_doc, "~> 0.23", only: :dev, runtime: false}
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
     ]
   end

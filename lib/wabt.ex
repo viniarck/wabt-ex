@@ -26,6 +26,7 @@ defmodule Wabt do
   @doc """
   Convert a wasm binary file to a wat file.
   """
+  @spec wasm_to_wat_file(String.t(), String.t()) :: {atom(), String.t()}
   def wasm_to_wat_file(wasm_file, wat_file)
       when is_bitstring(wasm_file) and is_bitstring(wat_file) do
     case Wabt.Native.wasm_to_wat(wasm_file, wat_file) do
@@ -37,6 +38,7 @@ defmodule Wabt do
   @doc """
   Convert a wasm binary file to a wat file. It might raise Wabt.Error
   """
+  @spec wasm_to_wat_file!(String.t(), String.t()) :: String.t()
   def wasm_to_wat_file!(wasm_file, wat_file)
       when is_bitstring(wasm_file) and is_bitstring(wat_file) do
     case Wabt.Native.wasm_to_wat(wasm_file, wat_file) do
@@ -48,6 +50,7 @@ defmodule Wabt do
   @doc """
   Convert wasm binary bytes to wat bytes.
   """
+  @spec wasm_to_wat_bytes(String.t()) :: {atom(), String.t()}
   def wasm_to_wat_bytes(wasm_bytes) when is_bitstring(wasm_bytes) do
     wasm_file = Briefly.create!()
     File.write!(wasm_file, wasm_bytes, [:binary])
@@ -67,8 +70,9 @@ defmodule Wabt do
   end
 
   @doc """
-  Convert wasm binary bytes to wat bytes.
+  Convert wasm binary bytes to wat bytes. It might raise Wabt.Error
   """
+  @spec wasm_to_wat_bytes!(String.t()) :: String.t()
   def wasm_to_wat_bytes!(wasm_bytes) when is_bitstring(wasm_bytes) do
     case Wabt.wasm_to_wat_bytes(wasm_bytes) do
       {:error, msg} -> raise Error, message: msg
@@ -79,6 +83,7 @@ defmodule Wabt do
   @doc """
   Convert a wat file to a wasm binary file.
   """
+  @spec wat_to_wasm_file(String.t(), String.t()) :: {atom(), String.t()}
   def wat_to_wasm_file(wat_file, wasm_file)
       when is_bitstring(wat_file) and is_bitstring(wasm_file) do
     case Wabt.Native.wat_to_wasm(wat_file, wasm_file) do
@@ -88,8 +93,9 @@ defmodule Wabt do
   end
 
   @doc """
-  Convert a wat file to a wasm binary file.
+  Convert a wat file to a wasm binary file. It might raise Wabt.Error
   """
+  @spec wat_to_wasm_file!(String.t(), String.t()) :: String.t()
   def wat_to_wasm_file!(wat_file, wasm_file)
       when is_bitstring(wat_file) and is_bitstring(wat_file) do
     case Wabt.Native.wat_to_wasm(wat_file, wasm_file) do
@@ -101,6 +107,7 @@ defmodule Wabt do
   @doc """
   Convert wat bytes to wasm binary bytes.
   """
+  @spec wat_to_wasm_bytes(String.t()) :: {atom(), String.t()}
   def wat_to_wasm_bytes(wat_bytes) when is_bitstring(wat_bytes) do
     wat_file = Briefly.create!()
     File.write!(wat_file, wat_bytes, [:binary])
@@ -120,8 +127,9 @@ defmodule Wabt do
   end
 
   @doc """
-  Convert wat bytes to wasm binary bytes.
+  Convert wat bytes to wasm binary bytes. It might raise Wabt.Error
   """
+  @spec wat_to_wasm_bytes!(String.t()) :: String.t()
   def wat_to_wasm_bytes!(wat_bytes) when is_bitstring(wat_bytes) do
     case Wabt.wat_to_wasm_bytes(wat_bytes) do
       {:ok, wasm_bytes} -> wasm_bytes

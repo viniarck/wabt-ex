@@ -1,14 +1,14 @@
 <div align="center">
   <h1><code>wabt-ex</code></h1>
 
-  <strong> 🛠️ <a href="https://github.com/WebAssembly/wabt">WebAssembly Binary Toolkit </a> bindings for Elixir 💧</strong>
+  <strong> 🛠️ <a href="https://github.com/WebAssembly/wabt">WebAssembly Binary Toolkit </a> bindings for Elixir💧</strong>
 
-  <p></p>
-  <p>
-    <a href="https://github.com/viniarck/wabt-ex/workflows/.github/workflows/tests.yml/badge.svg"><img src="https://github.com/viniarck/wabt-ex/workflows/.github/workflows/tests.yml/badge.svg" alt="tests" /></a>
-    <a href="https://img.shields.io/hexpm/v/wabt.svg"><img src="https://img.shields.io/hexpm/v/wabt.svg" alt="hex.pm version" /></a>
-    <a href="https://img.shields.io/hexpm/v/wabt.svg"><img src="https://img.shields.io/hexpm/dt/wabt.svg" alt="hex.pm downloads" /></a>
-  </p>
+  <!-- <p></p> -->
+  <!-- <p> -->
+  <!--   <a href="https://github.com/viniarck/wabt-ex/workflows/.github/workflows/tests.yml/badge.svg"><img src="https://github.com/viniarck/wabt-ex/workflows/.github/workflows/tests.yml/badge.svg" alt="tests" /></a> -->
+  <!--   <a href="https://img.shields.io/hexpm/v/wabt.svg"><img src="https://img.shields.io/hexpm/v/wabt.svg" alt="hex.pm version" /></a> -->
+  <!--   <a href="https://img.shields.io/hexpm/v/wabt.svg"><img src="https://img.shields.io/hexpm/dt/wabt.svg" alt="hex.pm downloads" /></a> -->
+  <!-- </p> -->
 
 
   <h3>
