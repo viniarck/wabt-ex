@@ -24,15 +24,29 @@ defmodule Wabt do
   end
 
   @doc """
-  Convert a Wasm file to a Wat file.
+  Convert a wasm binary file to a wat file.
   """
   def wasm_to_wat_file(wasm_file, wat_file)
       when is_bitstring(wasm_file) and is_bitstring(wat_file) do
-    Wabt.Native.wasm_to_wat(wasm_file, wat_file)
+    case Wabt.Native.wasm_to_wat(wasm_file, wat_file) do
+      :ok -> {:ok, wat_file}
+      {:error, msg} -> {:error, msg}
+    end
   end
 
   @doc """
-  Convert Wasm binary bytes to Wat bytes.
+  Convert a wasm binary file to a wat file. It might raise Wabt.Error
+  """
+  def wasm_to_wat_file!(wasm_file, wat_file)
+      when is_bitstring(wasm_file) and is_bitstring(wat_file) do
+    case Wabt.Native.wasm_to_wat(wasm_file, wat_file) do
+      {:ok, wat_file} -> wat_file
+      {:error, msg} -> raise Error, message: msg
+    end
+  end
+
+  @doc """
+  Convert wasm binary bytes to wat bytes.
   """
   def wasm_to_wat_bytes(wasm_bytes) when is_bitstring(wasm_bytes) do
     wasm_file = Briefly.create!()
@@ -42,32 +56,76 @@ defmodule Wabt do
 
     case Wabt.Native.wasm_to_wat(wasm_file, wat_file) do
       :ok ->
-        wat = File.read!(wat_file)
+        wat_bytes = File.read!(wat_file)
         File.rm!(wasm_file)
         File.rm!(wat_file)
-        wat
+        {:ok, wat_bytes}
 
-      {:error, err} ->
-        {:error, err}
+      {:error, msg} ->
+        {:error, msg}
     end
   end
 
   @doc """
-  Convert Wasm binary bytes to Wat bytes.
+  Convert wasm binary bytes to wat bytes.
   """
   def wasm_to_wat_bytes!(wasm_bytes) when is_bitstring(wasm_bytes) do
     case Wabt.wasm_to_wat_bytes(wasm_bytes) do
-      {:error, err} -> raise Error, message: err
-      wat -> wat
+      {:error, msg} -> raise Error, message: msg
+      {:ok, wat} -> wat
     end
   end
 
+  @doc """
+  Convert a wat file to a wasm binary file.
+  """
+  def wat_to_wasm_file(wat_file, wasm_file)
+      when is_bitstring(wat_file) and is_bitstring(wasm_file) do
+    case Wabt.Native.wat_to_wasm(wat_file, wasm_file) do
+      :ok -> {:ok, wasm_file}
+      {:error, msg} -> {:error, msg}
+    end
+  end
 
   @doc """
-  Convert a Wat file to a Wasm file.
+  Convert a wat file to a wasm binary file.
   """
-  def wat_to_wasm_file(wasm_file, wat_file)
-      when is_bitstring(wasm_file) and is_bitstring(wat_file) do
-    Wabt.Native.wat_to_wasm(wasm_file, wat_file)
+  def wat_to_wasm_file!(wat_file, wasm_file)
+      when is_bitstring(wat_file) and is_bitstring(wat_file) do
+    case Wabt.Native.wat_to_wasm(wat_file, wasm_file) do
+      :ok -> wasm_file
+      {:error, msg} -> raise Error, message: msg
+    end
+  end
+
+  @doc """
+  Convert wat bytes to wasm binary bytes.
+  """
+  def wat_to_wasm_bytes(wat_bytes) when is_bitstring(wat_bytes) do
+    wat_file = Briefly.create!()
+    File.write!(wat_file, wat_bytes, [:binary])
+
+    wasm_file = Briefly.create!()
+
+    case Wabt.Native.wat_to_wasm(wat_file, wasm_file) do
+      :ok ->
+        wasm_bytes = File.read!(wasm_file)
+        File.rm!(wasm_file)
+        File.rm!(wat_file)
+        {:ok, wasm_bytes}
+
+      {:error, msg} ->
+        {:error, msg}
+    end
+  end
+
+  @doc """
+  Convert wat bytes to wasm binary bytes.
+  """
+  def wat_to_wasm_bytes!(wat_bytes) when is_bitstring(wat_bytes) do
+    case Wabt.wat_to_wasm_bytes(wat_bytes) do
+      {:ok, wasm_bytes} -> wasm_bytes
+      {:error, msg} -> {:error, msg}
+    end
   end
 end
