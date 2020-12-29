@@ -12,6 +12,7 @@ ifneq ($(OS),Windows_NT)
 endif
 
 LDFLAGS += -Iwabt/
+LDFLAGS += -Inative/include/
 LDFLAGS += -Iwabt/build/
 LDFLAGS += -I$(ERLANG_PATH)
 LDFLAGS += -lwabt
