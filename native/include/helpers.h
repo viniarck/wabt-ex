@@ -1,7 +1,19 @@
+#ifndef WABTEX_HELPERS_
+#define WABTEX_HELPERS_
+
+#include <erl_nif.h>
 #include <sys/stat.h>
 #include <vector>
 
 #include "src/string-view.h"
+
+std::vector<uint8_t> elr_binary_to_vector(const ErlNifBinary &bin) {
+  std::vector<uint8_t> vec;
+  for (size_t i = 0; i < bin.size; i++) {
+    vec.push_back(bin.data[i]);
+  }
+  return vec;
+}
 
 wabt::Result WriteBufferToFile(wabt::string_view filename,
                                const wabt::OutputBuffer &buffer,
@@ -19,7 +31,6 @@ wabt::Result WriteBufferToFile(wabt::string_view filename,
   }
   return result;
 }
-
 
 wabt::Result read_file(wabt::string_view filename,
                        std::vector<uint8_t> *out_data, wabt::Errors *errors) {
@@ -84,3 +95,5 @@ wabt::Result read_file(wabt::string_view filename,
   fclose(infile);
   return wabt::Result::Ok;
 }
+
+#endif

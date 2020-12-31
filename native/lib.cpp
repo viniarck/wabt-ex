@@ -57,11 +57,7 @@ ERL_NIF_TERM wasm_to_wat(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   wabt::WriteWatOptions s_write_wat_options;
   std::unique_ptr<wabt::FileStream> s_log_stream;
 
-  std::vector<uint8_t> file_data;
-  for (size_t i = 0; i < wasm_bytes.size; i++) {
-    file_data.push_back(wasm_bytes.data[i]);
-  }
-
+  auto file_data = elr_binary_to_vector(wasm_bytes);
   wabt::Module module;
   const bool s_read_debug_names = true;
   const bool kStopOnFirstError = true;
@@ -109,15 +105,10 @@ ERL_NIF_TERM wat_to_wasm(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   wabt::InitStdio();
   wabt::Errors errors;
   wabt::Result result;
-  std::string s_infile((char *)wat_bytes.data, wat_bytes.size);
   std::unique_ptr<wabt::FileStream> s_log_stream;
   wabt::WriteBinaryOptions s_write_binary_options;
 
-  std::vector<uint8_t> file_data;
-  for (size_t i = 0; i < wat_bytes.size; i++) {
-    file_data.push_back(wat_bytes.data[i]);
-  }
-
+  auto file_data = elr_binary_to_vector(wat_bytes);
   std::unique_ptr<wabt::WastLexer> lexer = wabt::WastLexer::CreateBufferLexer(
       "", file_data.data(), file_data.size());
 
@@ -171,10 +162,7 @@ ERL_NIF_TERM wasm_decompile(ErlNifEnv *env, int argc,
   wabt::DecompileOptions decompile_options;
   bool fail_on_custom_section_error = true;
 
-  std::vector<uint8_t> file_data;
-  for (size_t i = 0; i < wasm_bytes.size; i++) {
-    file_data.push_back(wasm_bytes.data[i]);
-  }
+  auto file_data = elr_binary_to_vector(wasm_bytes);
 
   wabt::Module module;
   const bool kStopOnFirstError = true;
