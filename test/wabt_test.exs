@@ -35,7 +35,6 @@ defmodule WabtTest do
       |> Wabt.Wasm.to_wat!()
 
     assert wat_file |> File.read!() == wat_bytes
-
   end
 
   test "wasm_decompile" do
@@ -47,5 +46,26 @@ defmodule WabtTest do
       |> Wabt.Wasm.decompile!()
 
     assert String.contains?(decompiled, "export function plus_10")
+  end
+
+  test "wasm_validate" do
+    wasm_file = "test/data/hello_bg.wasm"
+
+    wasm_bytes =
+      wasm_file
+      |> File.read!()
+
+    assert wasm_bytes == Wabt.Wasm.validate!(wasm_bytes)
+  end
+
+  test "wasm_validate_error" do
+    wasm_file = "test/data/hello_bg.wasm"
+
+    wasm_bytes =
+      wasm_file
+      |> File.read!()
+      |> String.slice(0, 10)
+
+    {:error, msg} = Wabt.Wasm.validate(wasm_bytes)
   end
 end

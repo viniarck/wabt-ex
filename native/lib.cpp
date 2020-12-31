@@ -203,10 +203,49 @@ ERL_NIF_TERM wasm_decompile(ErlNifEnv *env, int argc,
   return enif_make_tuple2(env, mk_atom(env, "ok"), enif_make_binary(env, &out));
 }
 
+ERL_NIF_TERM wasm_validate(ErlNifEnv *env, int argc,
+                           const ERL_NIF_TERM argv[]) {
+
+  ErlNifBinary wasm_bytes;
+  if (!enif_inspect_binary(env, argv[0], &wasm_bytes))
+    return mk_error(env, "invalid wasm argument");
+
+  wabt::InitStdio();
+  wabt::Errors errors;
+  wabt::Result result;
+
+  wabt::Module module;
+  wabt::Features features;
+  const bool kStopOnFirstError = true;
+  const bool s_fail_on_custom_section_error = true;
+  const bool s_read_debug_names = true;
+  auto file_data = elr_binary_to_vector(wasm_bytes);
+  std::unique_ptr<wabt::FileStream> s_log_stream;
+  wabt::ReadBinaryOptions options(features, s_log_stream.get(),
+                                  s_read_debug_names, kStopOnFirstError,
+                                  s_fail_on_custom_section_error);
+  result = wabt::ReadBinaryIr("", file_data.data(), file_data.size(), options,
+                              &errors, &module);
+
+  if (wabt::Failed(result)) {
+    return mk_error(env, errors.at(0).message);
+  }
+
+  wabt::ValidateOptions val_options(features);
+  result = wabt::ValidateModule(&module, &errors, val_options);
+
+  if (wabt::Failed(result)) {
+    return mk_error(env, errors.at(0).message);
+  }
+
+  return mk_atom(env, "ok");
+}
+
 ErlNifFunc nif_funcs[] = {
     {"wasm_to_wat", 1, wasm_to_wat, 0},
     {"wat_to_wasm", 1, wat_to_wasm, 0},
     {"wasm_decompile", 1, wasm_decompile, 0},
+    {"wasm_validate", 1, wasm_validate, 0},
 };
 
 ERL_NIF_INIT(Elixir.Wabt.Native, nif_funcs, load, NULL, NULL, unload);

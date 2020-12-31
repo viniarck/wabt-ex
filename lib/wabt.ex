@@ -25,8 +25,12 @@ defmodule Wabt do
       raise "NIF wat_to_wasm/1 failed to load"
     end
 
-    def wasm_decompile(_wasm_file) do
+    def wasm_decompile(_wasm_bytes) do
       raise "NIF wasm_decompile/1 failed to load"
+    end
+
+    def wasm_validate(_wasm_bytes) do
+      raise "NIF wasm_validate/1 failed to load"
     end
   end
 end
