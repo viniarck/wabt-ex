@@ -8,7 +8,7 @@ defmodule WabtTest do
     wat_bytes =
       wasm_file
       |> File.read!()
-      |> Wabt.Wasm.to_wat_bytes!()
+      |> Wabt.Wasm.to_wat!()
 
     assert String.contains?(wat_bytes, "plus_10")
   end
@@ -19,8 +19,8 @@ defmodule WabtTest do
     wasm_bytes =
       wasm_file
       |> File.read!()
-      |> Wabt.Wasm.to_wat_bytes!()
-      |> Wabt.Wat.to_wasm_bytes!()
+      |> Wabt.Wasm.to_wat!()
+      |> Wabt.Wat.to_wasm!()
 
     assert File.read!(wasm_file) |> String.slice(0, 50) == wasm_bytes |> String.slice(0, 50)
   end
@@ -31,10 +31,21 @@ defmodule WabtTest do
     wat_bytes =
       wat_file
       |> File.read!()
-      |> Wabt.Wat.to_wasm_bytes!()
-      |> Wabt.Wasm.to_wat_bytes!()
+      |> Wabt.Wat.to_wasm!()
+      |> Wabt.Wasm.to_wat!()
 
     assert wat_file |> File.read!() == wat_bytes
 
+  end
+
+  test "wasm_decompile" do
+    wasm_file = "test/data/hello_bg.wasm"
+
+    decompiled =
+      wasm_file
+      |> File.read!()
+      |> Wabt.Wasm.decompile!()
+
+    assert String.contains?(decompiled, "export function plus_10")
   end
 end

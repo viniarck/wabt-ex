@@ -17,12 +17,16 @@ defmodule Wabt do
       :erlang.load_nif('./priv/native', 0)
     end
 
-    def wasm_to_wat(_wasm, _wat) do
-      raise "NIF wasm_to_wat/2 failed to load"
+    def wasm_to_wat(_wasm_bytes) do
+      raise "NIF wasm_to_wat/1 failed to load"
     end
 
-    def wat_to_wasm(_wat, _wasm) do
-      raise "NIF wat_to_wasm/2 failed to load"
+    def wat_to_wasm(_wat_bytes) do
+      raise "NIF wat_to_wasm/1 failed to load"
+    end
+
+    def wasm_decompile(_wasm_file) do
+      raise "NIF wasm_decompile/1 failed to load"
     end
   end
 end

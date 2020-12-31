@@ -4,61 +4,40 @@ defmodule Wabt.Wasm do
   """
 
   @doc """
-  Convert a wasm binary file to a wat file.
+  Convert wasm binary bytes to wat.
   """
-  @spec to_wat_file(String.t(), String.t()) :: {atom(), String.t()}
-  def to_wat_file(wasm_file, wat_file)
-      when is_bitstring(wasm_file) and is_bitstring(wat_file) do
-    case Wabt.Native.wasm_to_wat(wasm_file, wat_file) do
-      :ok -> {:ok, wat_file}
-      {:error, msg} -> {:error, msg}
+  @spec to_wat(String.t()) :: {atom(), String.t()}
+  def to_wat(wasm_bytes) when is_bitstring(wasm_bytes) do
+    Wabt.Native.wasm_to_wat(wasm_bytes)
+  end
+
+  @doc """
+  Convert wasm binary bytes to wat. It might raise Wabt.Error
+  """
+  @spec to_wat!(String.t()) :: String.t()
+  def to_wat!(wasm_bytes) when is_bitstring(wasm_bytes) do
+    case Wabt.Wasm.to_wat(wasm_bytes) do
+      {:error, msg} -> raise Wabt.Error, message: msg
+      {:ok, wat_bytes} -> wat_bytes
     end
   end
 
   @doc """
-  Convert a wasm binary file to a wat file. It might raise Wabt.Error
+  Decompile a wasm binary file into readable C-like syntax.
   """
-  @spec to_wat_file!(String.t(), String.t()) :: String.t()
-  def to_wat_file!(wasm_file, wat_file)
-      when is_bitstring(wasm_file) and is_bitstring(wat_file) do
-    case Wabt.Native.wasm_to_wat(wasm_file, wat_file) do
-      {:ok, wat_file} -> wat_file
-      {:error, msg} -> raise Error, message: msg
-    end
+  @spec decompile(String.t()) :: {atom(), String.t()}
+  def decompile(wasm_file) when is_bitstring(wasm_file) do
+    Wabt.Native.wasm_decompile(wasm_file)
   end
 
   @doc """
-  Convert wasm binary bytes to wat bytes.
+  Decompile a wasm binary file into readable C-like syntax. It might raise Wabt.Error.
   """
-  @spec to_wat_bytes(String.t()) :: {atom(), String.t()}
-  def to_wat_bytes(wasm_bytes) when is_bitstring(wasm_bytes) do
-    wasm_file = Briefly.create!()
-    File.write!(wasm_file, wasm_bytes, [:binary])
-
-    wat_file = Briefly.create!()
-
-    case Wabt.Native.wasm_to_wat(wasm_file, wat_file) do
-      :ok ->
-        wat_bytes = File.read!(wat_file)
-        File.rm!(wasm_file)
-        File.rm!(wat_file)
-        {:ok, wat_bytes}
-
-      {:error, msg} ->
-        {:error, msg}
+  @spec decompile(String.t()) :: {atom(), String.t()}
+  def decompile!(wasm_file) when is_bitstring(wasm_file) do
+    case Wabt.Native.wasm_decompile(wasm_file) do
+      {:error, msg} -> raise Wabt.Error, message: msg
+      {:ok, decompiled} -> decompiled
     end
   end
-
-  @doc """
-  Convert wasm binary bytes to wat bytes. It might raise Wabt.Error
-  """
-  @spec to_wat_bytes(String.t()) :: String.t()
-  def to_wat_bytes!(wasm_bytes) when is_bitstring(wasm_bytes) do
-    case Wabt.Wasm.to_wat_bytes(wasm_bytes) do
-      {:error, msg} -> raise Error, message: msg
-      {:ok, wat} -> wat
-    end
-  end
-
-
 end

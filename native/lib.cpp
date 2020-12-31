@@ -6,6 +6,8 @@
 #include "src/binary-reader-ir.h"
 #include "src/binary-reader.h"
 #include "src/binary-writer.h"
+#include "src/decompiler-naming.h"
+#include "src/decompiler.h"
 #include "src/error-formatter.h"
 #include "src/feature.h"
 #include "src/generate-names.h"
@@ -44,28 +46,20 @@ int load(ErlNifEnv *env, void **priv, ERL_NIF_TERM load_info) { return 0; }
 void unload(ErlNifEnv *env, void *priv) {}
 
 ERL_NIF_TERM wasm_to_wat(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
-  ErlNifBinary wasm_file;
-  if (!enif_inspect_binary(env, argv[0], &wasm_file))
+  ErlNifBinary wasm_bytes;
+  if (!enif_inspect_binary(env, argv[0], &wasm_bytes))
     return mk_error(env, "invalid wasm argument");
 
-  ErlNifBinary wat_file;
-  if (!enif_inspect_binary(env, argv[1], &wat_file))
-    return mk_error(env, "invalid wat argument");
-
   wabt::InitStdio();
+  wabt::Errors errors;
   wabt::Result result;
-  std::vector<uint8_t> file_data;
   wabt::Features s_features;
   wabt::WriteWatOptions s_write_wat_options;
-  std::string s_infile((char *)wasm_file.data, wasm_file.size);
-  std::string s_outfile((char *)wat_file.data, wat_file.size);
   std::unique_ptr<wabt::FileStream> s_log_stream;
 
-  wabt::Errors errors;
-  result = read_file(s_infile.c_str(), &file_data, &errors);
-
-  if (wabt::Failed(result)) {
-    return mk_error(env, errors.at(0).message);
+  std::vector<uint8_t> file_data;
+  for (size_t i = 0; i < wasm_bytes.size; i++) {
+    file_data.push_back(wasm_bytes.data[i]);
   }
 
   wabt::Module module;
@@ -75,8 +69,8 @@ ERL_NIF_TERM wasm_to_wat(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
   wabt::ReadBinaryOptions options(s_features, s_log_stream.get(),
                                   s_read_debug_names, kStopOnFirstError,
                                   s_fail_on_custom_section_error);
-  result = wabt::ReadBinaryIr(s_infile.c_str(), file_data.data(),
-                              file_data.size(), options, &errors, &module);
+  result = wabt::ReadBinaryIr("", file_data.data(), file_data.size(), options,
+                              &errors, &module);
 
   if (wabt::Failed(result)) {
     return mk_error(env, errors.at(0).message);
@@ -89,44 +83,43 @@ ERL_NIF_TERM wasm_to_wat(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
     return mk_error(env, errors.at(0).message);
   }
 
-  wabt::FileStream stream(!s_outfile.empty() ? wabt::FileStream(s_outfile)
-                                             : wabt::FileStream(stdout));
+  wabt::MemoryStream stream;
   result = wabt::WriteWat(&stream, &module, s_write_wat_options);
 
   if (wabt::Failed(result)) {
     return mk_error(env, errors.at(0).message);
   }
 
-  return enif_make_atom(env, "ok");
+  ErlNifBinary out;
+  std::vector<uint8_t> *data = &stream.output_buffer().data;
+  enif_alloc_binary(data->size(), &out);
+  for (size_t i = 0; i < data->size(); i++) {
+    out.data[i] = data->at(i);
+  }
+
+  return enif_make_tuple2(env, mk_atom(env, "ok"), enif_make_binary(env, &out));
 }
 
 ERL_NIF_TERM wat_to_wasm(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
 
-  ErlNifBinary wat_file;
-  if (!enif_inspect_binary(env, argv[0], &wat_file))
+  ErlNifBinary wat_bytes;
+  if (!enif_inspect_binary(env, argv[0], &wat_bytes))
     return mk_error(env, "invalid wat argument");
 
-  ErlNifBinary wasm_file;
-  if (!enif_inspect_binary(env, argv[1], &wasm_file))
-    return mk_error(env, "invalid wasm argument");
-
   wabt::InitStdio();
+  wabt::Errors errors;
   wabt::Result result;
-  std::vector<uint8_t> file_data;
-  std::string s_infile((char *)wat_file.data, wat_file.size);
-  std::string s_outfile((char *)wasm_file.data, wasm_file.size);
+  std::string s_infile((char *)wat_bytes.data, wat_bytes.size);
   std::unique_ptr<wabt::FileStream> s_log_stream;
   wabt::WriteBinaryOptions s_write_binary_options;
 
-  wabt::Errors errors;
-  result = read_file(s_infile.c_str(), &file_data, &errors);
-
-  if (wabt::Failed(result)) {
-    return mk_error(env, errors.at(0).message);
+  std::vector<uint8_t> file_data;
+  for (size_t i = 0; i < wat_bytes.size; i++) {
+    file_data.push_back(wat_bytes.data[i]);
   }
 
   std::unique_ptr<wabt::WastLexer> lexer = wabt::WastLexer::CreateBufferLexer(
-      s_infile, file_data.data(), file_data.size());
+      "", file_data.data(), file_data.size());
 
   wabt::Features s_features;
   std::unique_ptr<wabt::Module> module;
@@ -153,19 +146,79 @@ ERL_NIF_TERM wat_to_wasm(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
     return mk_error(env, errors.at(0).message);
   }
 
-  result =
-      WriteBufferToFile(s_outfile.c_str(), stream.output_buffer(), &errors);
+  ErlNifBinary out;
+  std::vector<uint8_t> *data = &stream.output_buffer().data;
+  enif_alloc_binary(data->size(), &out);
+  for (size_t i = 0; i < data->size(); i++) {
+    out.data[i] = data->at(i);
+  }
 
+  return enif_make_tuple2(env, mk_atom(env, "ok"), enif_make_binary(env, &out));
+}
+
+ERL_NIF_TERM wasm_decompile(ErlNifEnv *env, int argc,
+                            const ERL_NIF_TERM argv[]) {
+
+  ErlNifBinary wasm_bytes;
+  if (!enif_inspect_binary(env, argv[0], &wasm_bytes))
+    return mk_error(env, "invalid wasm argument");
+
+  wabt::InitStdio();
+  wabt::Errors errors;
+  wabt::Result result;
+
+  wabt::Features features;
+  wabt::DecompileOptions decompile_options;
+  bool fail_on_custom_section_error = true;
+
+  std::vector<uint8_t> file_data;
+  for (size_t i = 0; i < wasm_bytes.size; i++) {
+    file_data.push_back(wasm_bytes.data[i]);
+  }
+
+  wabt::Module module;
+  const bool kStopOnFirstError = true;
+  wabt::ReadBinaryOptions options(features, nullptr, true, kStopOnFirstError,
+                                  fail_on_custom_section_error);
+  result = wabt::ReadBinaryIr("", file_data.data(), file_data.size(), options,
+                              &errors, &module);
   if (wabt::Failed(result)) {
     return mk_error(env, errors.at(0).message);
   }
 
-  return enif_make_atom(env, "ok");
+  wabt::ValidateOptions val_options(features);
+  result = wabt::ValidateModule(&module, &errors, val_options);
+  if (wabt::Failed(result)) {
+    return mk_error(env, errors.at(0).message);
+  }
+
+  result = wabt::GenerateNames(
+      &module, static_cast<wabt::NameOpts>(wabt::NameOpts::AlphaNames));
+  if (wabt::Failed(result)) {
+    return mk_error(env, errors.at(0).message);
+  }
+  RenameAll(module);
+
+  result = wabt::ApplyNames(&module);
+  if (wabt::Failed(result)) {
+    return mk_error(env, errors.at(0).message);
+  }
+
+  auto s = Decompile(module, decompile_options);
+
+  ErlNifBinary out;
+  enif_alloc_binary(s.length(), &out);
+  for (size_t i = 0; i < s.length(); i++) {
+    out.data[i] = s.at(i);
+  }
+
+  return enif_make_tuple2(env, mk_atom(env, "ok"), enif_make_binary(env, &out));
 }
 
 ErlNifFunc nif_funcs[] = {
-    {"wasm_to_wat", 2, wasm_to_wat, 0},
-    {"wat_to_wasm", 2, wat_to_wasm, 0},
+    {"wasm_to_wat", 1, wasm_to_wat, 0},
+    {"wat_to_wasm", 1, wat_to_wasm, 0},
+    {"wasm_decompile", 1, wasm_decompile, 0},
 };
 
 ERL_NIF_INIT(Elixir.Wabt.Native, nif_funcs, load, NULL, NULL, unload);
