@@ -37,7 +37,6 @@ defmodule Wabt.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:briefly, "~> 0.3.0"},
       {:ex_doc, "~> 0.23", only: :dev, runtime: false}
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
     ]
