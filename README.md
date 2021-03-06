@@ -9,7 +9,7 @@
   <!--  -->
 </div>
 
-
+Alghough the core API is available exposing wabt, it's still work-in-progress. Subscribe on this repo for further updates.
 
 <!-- ## Installation -->
 <!--  -->
