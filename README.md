@@ -9,9 +9,11 @@
   <!--  -->
 </div>
 
+
+## Installation
+
 Alghough the core API is available exposing wabt, it's still work-in-progress. Subscribe on this repo for further updates.
 
-<!-- ## Installation -->
 <!--  -->
 <!-- You can add `wabt` to your list of dependencies in `mix.exs`: -->
 <!--  -->
